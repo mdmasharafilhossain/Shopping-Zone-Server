@@ -28,6 +28,7 @@ async function run() {
     // ----------------------------All Collection Name------------------------
     const CategoriesCollection = client.db('ShoppingZone').collection('Categories');
     const FlashSaleCollection = client.db('ShoppingZone').collection('FlashSale');
+    const UsersCollection = client.db('ShoppingZone').collection('users');
 
     // -------------------------------- Categories----------------------
 
@@ -43,7 +44,7 @@ async function run() {
       const color = req.query.color || '';
       const type = req.query.type || '';
       console.log(color)
-      let sortOption = {};
+      
       let filterOption = {};
       console.log(sort)
       let sortCriteria = {};
@@ -62,6 +63,26 @@ async function run() {
       const result = await FlashSaleCollection.find(filterOption).sort(sortCriteria).toArray();
       res.send({ result });
   });
+
+
+  // --------------------------------Users--------------------------
+  app.get("/users", async(req,res)=>{
+    const result = await UsersCollection.find().toArray();
+    res.send({result});
+});
+
+app.post('/users', async(req,res)=>{
+  const user = req.body;
+  // cheaking user 
+  const query = {email:user.email}
+  const ExistingUser = await UsersCollection.findOne(query);
+  if(ExistingUser){
+    return res.send({message: 'user Already Exists',insertedId: null})
+  }
+  const result = await UsersCollection.insertOne(user);
+  res.send(result);
+});
+
 
 
 
