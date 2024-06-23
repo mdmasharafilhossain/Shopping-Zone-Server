@@ -38,10 +38,19 @@ async function run() {
 
 
     // ----------------------------Flash Sale-----------------------------------
-    app.get("/flashSale", async(req,res)=>{
-      const result = await FlashSaleCollection.find().toArray();
-      res.send({result});
-  })
+    app.get("/flashSale", async (req, res) => {
+      const sort = req.query.sort;
+      console.log(sort)
+      let sortCriteria = {};
+      if (sort === 'lowToHigh') {
+          sortCriteria = { discount_price: 1 };
+      } else if (sort === 'highToLow') {
+          sortCriteria = { discount_price: -1 };
+      }
+
+      const result = await FlashSaleCollection.find().sort(sortCriteria).toArray();
+      res.send({ result });
+  });
 
 
 
