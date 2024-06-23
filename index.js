@@ -39,7 +39,12 @@ async function run() {
 
     // ----------------------------Flash Sale-----------------------------------
     app.get("/flashSale", async (req, res) => {
-      const sort = req.query.sort;
+      const sort = req.query.sort || '';
+      const color = req.query.color || '';
+      const type = req.query.type || '';
+      console.log(color)
+      let sortOption = {};
+      let filterOption = {};
       console.log(sort)
       let sortCriteria = {};
       if (sort === 'lowToHigh') {
@@ -47,8 +52,14 @@ async function run() {
       } else if (sort === 'highToLow') {
           sortCriteria = { discount_price: -1 };
       }
+      if (color) {
+        filterOption = { color: { $regex: color, $options: 'i' } };
+      }
+      if (type) {
+        filterOption.type = type;
+      }
 
-      const result = await FlashSaleCollection.find().sort(sortCriteria).toArray();
+      const result = await FlashSaleCollection.find(filterOption).sort(sortCriteria).toArray();
       res.send({ result });
   });
 
