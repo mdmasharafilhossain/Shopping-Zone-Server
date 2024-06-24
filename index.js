@@ -111,7 +111,7 @@ async function run() {
         });
 
         // ----------------------------Orders--------------------------
-        app.post('/buy', async (req, res) => {
+         app.post('/buy', async (req, res) => {
             const order = req.body;
             const result = await BuyOrdersCollection.insertOne(order);
             res.send(result);
