@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 require('dotenv').config();
 const port = process.env.PORT || 5000;
@@ -8,7 +9,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lzichn4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 const client = new MongoClient(uri, {
@@ -104,13 +105,30 @@ async function run() {
         });
 
         // ----------------------------Cart--------------------------
+        app.get("/cart/user/:customer_email", async (req, res) => {
+            const customer_email = req.params.customer_email;
+            const result = await CartCollection.find({ customer_email }).toArray();
+            res.send(result);
+        });
         app.post('/cart', async (req, res) => {
             const cartItem = req.body;
             const result = await CartCollection.insertOne(cartItem);
             res.send(result);
         });
 
+        app.delete('/cart/user/:id', async(req,res)=>{
+            const id = req.params.id;
+            const query = {_id: new ObjectId(id)}
+            const result = await CartCollection.deleteOne(query);
+            res.send(result);
+         });
+
+
         // ----------------------------Orders--------------------------
+        app.get("/buy", async (req, res) => {
+          const result = await BuyOrdersCollection.find().toArray();
+          res.send(result);
+        });
          app.post('/buy', async (req, res) => {
             const order = req.body;
             const result = await BuyOrdersCollection.insertOne(order);
