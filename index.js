@@ -33,6 +33,7 @@ async function run() {
         const WhiteListCollection = client.db('ShoppingZone').collection('whiteList');
         const AllProductsCollection = client.db('ShoppingZone').collection('AllProducts');
         const SellerCollection = client.db('ShoppingZone').collection('seller');
+        const UserPaymentCollection = client.db('ShoppingZone').collection('payment');
 
         // -------------------------------- Categories----------------------
         app.get("/categories", async (req, res) => {
@@ -257,6 +258,30 @@ app.post('/sellers', async (req, res) => {
     const result = await SellerCollection.insertOne(user);
     res.send(result);
 });
+
+// ------------------Stripe Payment--------------------
+
+    //Payment Intent
+    app.post("/create-payment-intent", async (req, res) => {
+        const { price } = req.body;
+        const amount = parseInt(price * 100);
+        console.log(amount);
+  
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+  
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      });
+  
+      app.get("/payments", async (req, res) => {
+        const result = await UserPaymentCollection.find().toArray();
+        res.send(result);
+      });
 
 
     } finally {
