@@ -32,6 +32,7 @@ async function run() {
         const BuyOrdersCollection = client.db('ShoppingZone').collection('buy');
         const WhiteListCollection = client.db('ShoppingZone').collection('whiteList');
         const AllProductsCollection = client.db('ShoppingZone').collection('AllProducts');
+        const SellerCollection = client.db('ShoppingZone').collection('seller');
 
         // -------------------------------- Categories----------------------
         app.get("/categories", async (req, res) => {
@@ -241,6 +242,19 @@ app.delete('/allProducts/user/:id', async(req,res)=>{
  app.post('/allProducts', async (req, res) => {
     const cartItem = req.body;
     const result = await AllProductsCollection.insertOne(cartItem);
+    res.send(result);
+});
+
+// --------------------Seller Info------------------------
+app.post('/sellers', async (req, res) => {
+    const user = req.body;
+    // Checking seller
+    const query = { email: user.email };
+    const ExistingUser = await SellerCollection.findOne(query);
+    if (ExistingUser) {
+        return res.send({ message: 'Seller Already Exists', insertedId: null });
+    }
+    const result = await SellerCollection.insertOne(user);
     res.send(result);
 });
 
