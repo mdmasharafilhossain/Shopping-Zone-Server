@@ -130,6 +130,26 @@ async function run() {
             const result = await UsersCollection.updateOne(filter, UpdatedDoc);
             res.send(result);
           });
+            // remove admin
+    app.patch("/users/remove-admin/:id", async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const UpdatedDoc = {
+          $unset: {
+            role: "",
+          },
+        };
+        const result = await UsersCollection.updateOne(filter, UpdatedDoc);
+        res.send(result);
+      });
+  
+      // Delete User
+      app.delete("/users/JobSeeker/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await UsersCollection.deleteOne(query);
+        res.send(result);
+      });
 
         // ----------------------------Cart--------------------------
         app.get("/cart/user/:customer_email", async (req, res) => {
