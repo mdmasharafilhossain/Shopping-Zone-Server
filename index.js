@@ -227,12 +227,22 @@ app.get("/allProducts", async (req, res) => {
     const result = await AllProductsCollection.find().toArray();
     res.send(result);
 });
+app.get("/allProducts/user/:seller_email", async (req, res) => {
+    const seller_email = req.params.seller_email;
+    const result = await WhiteListCollection.find({ seller_email }).toArray();
+    res.send(result);
+});
 app.delete('/allProducts/user/:id', async(req,res)=>{
     const id = req.params.id;
     const query = {_id: new ObjectId(id)}
     const result = await AllProductsCollection.deleteOne(query);
     res.send(result);
  });
+ app.post('/allProducts', async (req, res) => {
+    const cartItem = req.body;
+    const result = await AllProductsCollection.insertOne(cartItem);
+    res.send(result);
+});
 
 
     } finally {
