@@ -31,6 +31,7 @@ async function run() {
         const CartCollection = client.db('ShoppingZone').collection('Cart');
         const BuyOrdersCollection = client.db('ShoppingZone').collection('buy');
         const WhiteListCollection = client.db('ShoppingZone').collection('whiteList');
+        const AllProductsCollection = client.db('ShoppingZone').collection('AllProducts');
 
         // -------------------------------- Categories----------------------
         app.get("/categories", async (req, res) => {
@@ -75,6 +76,18 @@ async function run() {
             const result = await UsersCollection.find({ email }).toArray();
             res.send(result);
         });
+        app.get("/users/pagination", async (req, res) => {
+            const query = req.query;
+            const page = query.page;
+            console.log(page);
+            const pageNumber = parseInt(page);
+            const perPage = 10;
+            const skip = pageNumber * perPage;
+            const users = UsersCollection.find().skip(skip).limit(perPage);
+            const result = await users.toArray();
+            const UsersCount = await UsersCollection.countDocuments();
+            res.send({ result, UsersCount });
+          });
 
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -209,7 +222,18 @@ app.delete('/whiteList/user/:id', async(req,res)=>{
     res.send(result);
  });
 
-        
+//----------------------------------AllProductsCollection------------------------
+app.get("/allProducts", async (req, res) => {
+    const result = await AllProductsCollection.find().toArray();
+    res.send(result);
+});
+app.delete('/allProducts/user/:id', async(req,res)=>{
+    const id = req.params.id;
+    const query = {_id: new ObjectId(id)}
+    const result = await AllProductsCollection.deleteOne(query);
+    res.send(result);
+ });
+
 
     } finally {
         // Ensures that the client will close when you finish/error
