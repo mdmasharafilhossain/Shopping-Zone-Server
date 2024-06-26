@@ -30,6 +30,7 @@ async function run() {
         const UsersCollection = client.db('ShoppingZone').collection('users');
         const CartCollection = client.db('ShoppingZone').collection('Cart');
         const BuyOrdersCollection = client.db('ShoppingZone').collection('buy');
+        const WhiteListCollection = client.db('ShoppingZone').collection('whiteList');
 
         // -------------------------------- Categories----------------------
         app.get("/categories", async (req, res) => {
@@ -104,6 +105,32 @@ async function run() {
             res.send(result);
         });
 
+        app.get("/users/pagination", async (req, res) => {
+            const query = req.query;
+            const page = query.page;
+            console.log(page);
+            const pageNumber = parseInt(page);
+            const perPage = 10;
+            const skip = pageNumber * perPage;
+            const users = UsersCollection.find().skip(skip).limit(perPage);
+            const result = await users.toArray();
+            const UsersCount = await UsersCollection.countDocuments();
+            res.send({ result, UsersCount });
+          });
+      
+          // Make Admin to User
+          app.patch("/users/admin/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const UpdatedDoc = {
+              $set: {
+                role: "admin",
+              },
+            };
+            const result = await UsersCollection.updateOne(filter, UpdatedDoc);
+            res.send(result);
+          });
+
         // ----------------------------Cart--------------------------
         app.get("/cart/user/:customer_email", async (req, res) => {
             const customer_email = req.params.customer_email;
@@ -134,6 +161,35 @@ async function run() {
             const result = await BuyOrdersCollection.insertOne(order);
             res.send(result);
         });
+// --------------White List Collection---------------
+
+app.get("/whiteList/user/:customer_email", async (req, res) => {
+    const customer_email = req.params.customer_email;
+    const result = await WhiteListCollection.find({ customer_email }).toArray();
+    res.send(result);
+});
+
+app.post('/whiteList', async (req, res) => {
+    const whiteListItem = req.body;
+    const { customer_email, productCode } = whiteListItem;
+    const query = { customer_email, productCode };
+    const ExistingItem = await WhiteListCollection.findOne(query);
+    
+    if (ExistingItem) {
+        return res.send({ message: 'Item already exists in the whitelist', insertedId: null });
+    }
+    
+    const result = await WhiteListCollection.insertOne(whiteListItem);
+    res.send(result);
+});
+app.delete('/whiteList/user/:id', async(req,res)=>{
+    const id = req.params.id;
+    const query = {_id: new ObjectId(id)}
+    const result = await WhiteListCollection.deleteOne(query);
+    res.send(result);
+ });
+
+        
 
     } finally {
         // Ensures that the client will close when you finish/error
