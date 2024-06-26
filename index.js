@@ -104,7 +104,7 @@ async function run() {
             const result = await UsersCollection.updateOne(filter, updateDoc);
             res.send(result);
         });
-
+        //   Pagination Operation
         app.get("/users/pagination", async (req, res) => {
             const query = req.query;
             const page = query.page;
@@ -126,7 +126,7 @@ async function run() {
               $set: {
                 role: "admin",
               },
-            };
+             };
             const result = await UsersCollection.updateOne(filter, UpdatedDoc);
             res.send(result);
           });
