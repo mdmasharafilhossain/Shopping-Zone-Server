@@ -262,7 +262,7 @@ app.post('/sellers', async (req, res) => {
 // ------------------Stripe Payment--------------------
 
     //Payment Intent
-    app.post("/create-payment-intent", async (req, res) => {
+     app.post("/create-payment-intent", async (req, res) => {
         const { price } = req.body;
         const amount = parseInt(price * 100);
         console.log(amount);
