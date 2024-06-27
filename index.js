@@ -23,7 +23,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
 
         // ----------------------------All Collection Names------------------------
         const CategoriesCollection = client.db('ShoppingZone').collection('Categories');
