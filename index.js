@@ -297,8 +297,39 @@ app.put('/allProducts/:id', async (req, res) => {
     const result = await AllProductsCollection.updateOne(query, updateDoc);
     res.send(result);
 });
+app.put('/allProducts/editseller/:id', async (req, res) => {
+    const id = req.params.id;
+    const updatedProduct = req.body;
+    const query = { _id: new ObjectId(id) };
+    const updateDoc = {
+        $set: {
+            name: updatedProduct.name,
+            color: updatedProduct.color,
+            price: updatedProduct.price,
+            discount_price: updatedProduct.discount_price,
+            size: updatedProduct.size,
+            brand: updatedProduct.brand,
+            warranty: updatedProduct.warranty,
+            details: updatedProduct.details,
+            type: updatedProduct.type,
+            category: updatedProduct.category,
+        },
+    };
+    const result = await AllProductsCollection.updateOne(query, updateDoc);
+    res.send(result);
+});
 
 // --------------------Seller Info------------------------
+app.get("/sellers", async (req, res) => {
+    const result = await SellerCollection.find().toArray();
+    res.send(result);
+  });
+app.get("/sellers/profile/:email", async (req, res) => {
+    const email = req.params.email;
+    const result = await SellerCollection.find({ email }).toArray();
+    res.send(result);
+  });
+
 app.post('/sellers', async (req, res) => {
     const user = req.body;
     // Checking seller
@@ -309,6 +340,24 @@ app.post('/sellers', async (req, res) => {
     }
     const result = await SellerCollection.insertOne(user);
     res.send(result);
+});
+app.patch('/sellers', async (req, res) => {
+    const { name, number, address, email, Bank_Account_Number } = req.body;
+
+    try {
+        const updatedSeller = await SellerCollection.updateOne(
+            { email }, 
+            { $set: { name, number, address, Bank_Account_Number } } 
+        );
+
+        if (updatedSeller.modifiedCount) {
+            res.status(200).json({ message: 'Profile updated successfully', modifiedCount: updatedSeller.modifiedCount });
+        } else {
+            res.status(400).json({ message: 'No changes detected or profile not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
 });
 
 // ------------------Stripe Payment--------------------
