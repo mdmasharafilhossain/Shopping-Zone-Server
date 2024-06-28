@@ -47,6 +47,7 @@ async function run() {
             const sort = req.query.sort || '';
             const color = req.query.color || '';
             const type = req.query.type || '';
+            const search = req.query.search || '';
             console.log(color);
 
             let filterOption = {};
@@ -63,6 +64,9 @@ async function run() {
             if (type) {
                 filterOption.type = type;
             }
+            if (search) {
+                filterOption.name = { $regex: search, $options: 'i' };
+              }
 
             const result = await FlashSaleCollection.find(filterOption).sort(sortCriteria).toArray();
             res.send({ result });
@@ -227,14 +231,40 @@ app.delete('/whiteList/user/:id', async(req,res)=>{
 
 //----------------------------------AllProductsCollection------------------------
 app.get("/allProducts", async (req, res) => {
-    const result = await AllProductsCollection.find().toArray();
-    res.send(result);
+    const sort = req.query.sort || '';
+    const color = req.query.color || '';
+    const type = req.query.type || '';
+    console.log(color);
+
+    let filterOption = {};
+    console.log(sort);
+    let sortCriteria = {};
+    if (sort === 'lowToHigh') {
+        sortCriteria = { discount_price: 1 };
+    } else if (sort === 'highToLow') {
+        sortCriteria = { discount_price: -1 };
+    }
+    if (color) {
+        filterOption = { color: { $regex: color, $options: 'i' } };
+    }
+    if (type) {
+        filterOption.type = type;
+    }
+
+    const result = await AllProductsCollection.find(filterOption).sort(sortCriteria).toArray();
+    res.send(result );
 });
 app.get("/allProducts/user/:seller_email", async (req, res) => {
     const seller_email = req.params.seller_email;
     const result = await WhiteListCollection.find({ seller_email }).toArray();
     res.send(result);
 });
+app.get("/allProducts/seller/my/:seller_email", async (req, res) => {
+    const seller_email = req.params.seller_email;
+    const result = await AllProductsCollection.find({ seller_email }).toArray();
+    res.send(result);
+});
+
 app.delete('/allProducts/user/:id', async(req,res)=>{
     const id = req.params.id;
     const query = {_id: new ObjectId(id)}
@@ -244,6 +274,27 @@ app.delete('/allProducts/user/:id', async(req,res)=>{
  app.post('/allProducts', async (req, res) => {
     const cartItem = req.body;
     const result = await AllProductsCollection.insertOne(cartItem);
+    res.send(result);
+});
+app.put('/allProducts/:id', async (req, res) => {
+    const id = req.params.id;
+    const updatedProduct = req.body;
+    const query = { _id: new ObjectId(id) };
+    const updateDoc = {
+        $set: {
+            name: updatedProduct.name,
+            color: updatedProduct.color,
+            price: updatedProduct.price,
+            discount_price: updatedProduct.discount_price,
+            size: updatedProduct.size,
+            brand: updatedProduct.brand,
+            warranty: updatedProduct.warranty,
+            details: updatedProduct.details,
+            type: updatedProduct.type,
+            category: updatedProduct.category,
+        },
+    };
+    const result = await AllProductsCollection.updateOne(query, updateDoc);
     res.send(result);
 });
 
@@ -283,17 +334,50 @@ app.post('/sellers', async (req, res) => {
         const result = await UserPaymentCollection.find().toArray();
         res.send(result);
       });
-      app.get("/payments", async (req, res) => {
-        const cursor = UserPaymentCollection.find();
-        const result = await cursor.toArray();
+      app.get("/payments/user/:User_email", async (req, res) => {
+        const User_email = req.params.User_email;
+        const result = await UserPaymentCollection.find({ User_email }).toArray();
         res.send(result);
+      });
+      app.get("/payments/seller/:seller_email", async (req, res) => {
+        const seller_email = req.params.seller_email;
+        const result = await UserPaymentCollection.find({ seller_email: { $elemMatch: { $eq: seller_email } } }).toArray();
+        res.send(result);
+    });
+    
+    
+      app.patch("/payments/:id/deliver", async (req, res) => {
+        const { id } = req.params;
+        const query = { transaction_ID: id };
+        const update = { $set: { status: "delivered" } };
+        const result = await UserPaymentCollection.updateOne(query, update);
+        if (result.modifiedCount > 0) {
+          res.send({ message: "Order marked as delivered" });
+        } else {
+          res.status(404).send({ message: "Order not found" });
+        }
       });
   
       app.post("/payments", async (req, res) => {
-        const payment = req.body;
-        const paymentResult = UserPaymentCollection.insertOne(payment);
-        res.send(paymentResult);
-      });
+        try {
+            const payment = req.body;
+            const paymentResult = await UserPaymentCollection.insertOne(payment);
+            console.log('payment info', payment);
+    
+            const query = {
+                _id: {
+                    $in: payment.cartIds.map(id => new ObjectId(id))
+                }
+            };
+    
+            const deleteResult = await CartCollection.deleteMany(query);
+    
+            res.send({ paymentResult, deleteResult });
+        } catch (error) {
+            console.error('Error processing payment:', error);
+            res.status(500).send({ error: 'An error occurred while processing the payment' });
+        }
+    });
 
 
     } finally {
