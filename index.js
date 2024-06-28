@@ -83,6 +83,16 @@ async function run() {
             const result = await UsersCollection.find({ email }).toArray();
             res.send(result);
         });
+        app.get("/users/checkAdmin/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await UsersCollection.findOne(query);
+            let admin = false;
+            if (user) {
+              admin = user?.role == "admin";
+            }
+            res.send({ admin });
+          });
         app.get("/users/pagination", async (req, res) => {
             const query = req.query;
             const page = query.page;
@@ -359,6 +369,61 @@ app.patch('/sellers', async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 });
+app.get("/sellers/pagination", async (req, res) => {
+    const query = req.query;
+    const page = query.page;
+    console.log(page);
+    const pageNumber = parseInt(page);
+    const perPage = 10;
+    const skip = pageNumber * perPage;
+    const users = SellerCollection.find().skip(skip).limit(perPage);
+    const result = await users.toArray();
+    const UsersCount = await SellerCollection.countDocuments();
+    res.send({ result, UsersCount });
+  });
+
+  // make admin to Hiring Manager
+  app.patch("/sellers/admin/:id", async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const UpdatedDoc = {
+      $set: {
+        role2: "admin",
+      },
+    };
+    const result = await SellerCollection.updateOne(filter, UpdatedDoc);
+    res.send(result);
+  });
+
+  // remove admin Functionality added in Hiring Manager List
+  app.patch("/sellers/remove-admin/:id", async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+    const UpdatedDoc = {
+      $unset: {
+        role2: "",
+      },
+    };
+    const result = await SellerCollection.updateOne(filter, UpdatedDoc);
+    res.send(result);
+  });
+
+  app.delete("/sellers/HR/:id", async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await SellerCollection.deleteOne(query);
+    res.send(result);
+  });
+  app.get("/sellers/checkAdmin/:email", async (req, res) => {
+    const email = req.params.email;
+    const query = { email: email };
+    const user = await SellerCollection.findOne(query);
+    let admin = false;
+    if (user) {
+      admin = user?.role == "seller";
+    }
+    res.send({ admin });
+  });
 
 // ------------------Stripe Payment--------------------
 
