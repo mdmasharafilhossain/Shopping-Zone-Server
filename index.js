@@ -182,11 +182,18 @@ async function run() {
       });
 
         // ----------------------------Cart--------------------------
+        app.get("/cart", async (req, res) => {
+          const result = await CartCollection.find().toArray();
+            res.send(result);
+      });
+        
+        
         app.get("/cart/user/:customer_email", async (req, res) => {
             const customer_email = req.params.customer_email;
             const result = await CartCollection.find({ customer_email }).toArray();
             res.send(result);
         });
+
         app.post('/cart', async (req, res) => {
             const cartItem = req.body;
             const result = await CartCollection.insertOne(cartItem);
