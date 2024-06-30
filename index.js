@@ -35,6 +35,7 @@ async function run() {
         const AllProductsCollection = client.db('ShoppingZone').collection('AllProducts');
         const SellerCollection = client.db('ShoppingZone').collection('seller');
         const UserPaymentCollection = client.db('ShoppingZone').collection('payment');
+        const UserCommentCollection = client.db('ShoppingZone').collection('comment');
 
         // -------------------------------- Categories----------------------
         app.get("/categories", async (req, res) => {
@@ -77,6 +78,16 @@ async function run() {
             const result = await UsersCollection.find().toArray();
             res.send({ result });
         });
+        app.get('/users/phone', async (req, res) => {
+          const phone = req.query.phone;
+          const user = await UsersCollection.findOne({ phone });
+          if (user) {
+            res.json({ exists: true });
+          } else {
+            res.json({ exists: false });
+          }
+        });
+        
 
         app.get('/users/profile/:email', async (req, res) => {
             const email = req.params.email;
@@ -314,26 +325,28 @@ app.put('/allProducts/:id', async (req, res) => {
     const result = await AllProductsCollection.updateOne(query, updateDoc);
     res.send(result);
 });
-app.put('/allProducts/editseller/:id', async (req, res) => {
-    const id = req.params.id;
-    const updatedProduct = req.body;
-    const query = { _id: new ObjectId(id) };
-    const updateDoc = {
-        $set: {
-            name: updatedProduct.name,
-            color: updatedProduct.color,
-            price: updatedProduct.price,
-            discount_price: updatedProduct.discount_price,
-            size: updatedProduct.size,
-            brand: updatedProduct.brand,
-            warranty: updatedProduct.warranty,
-            details: updatedProduct.details,
-            type: updatedProduct.type,
-            category: updatedProduct.category,
-        },
-    };
-    const result = await AllProductsCollection.updateOne(query, updateDoc);
-    res.send(result);
+app.patch('/allProducts/editseller/:id', async (req, res) => {
+  const id = req.params.id;
+  const updatedProduct = req.body;
+  const query = { _id: new ObjectId(id) };
+  const updateDoc = {
+      $set: {
+          name: updatedProduct.name,
+          color: updatedProduct.color,
+          price: updatedProduct.price,
+          discount_price: updatedProduct.discount_price,
+          size: updatedProduct.size,
+          brand: updatedProduct.brand,
+          warranty: updatedProduct.warranty,
+          details: updatedProduct.details,
+          type: updatedProduct.type,
+          category: updatedProduct.category,
+          Offer_coupon: updatedProduct.Offer_coupon,
+          Offer_Percentage:updatedProduct.Offer_Percentage
+      },
+  };
+  const result = await AllProductsCollection.updateOne(query, updateDoc);
+  res.send(result);
 });
 
 // --------------------Seller Info------------------------
@@ -499,6 +512,12 @@ app.get("/sellers/pagination", async (req, res) => {
             res.status(500).send({ error: 'An error occurred while processing the payment' });
         }
     });
+
+    // -------------------------User Comment Collection---------------
+    app.get("/comment", async (req, res) => {
+      const result = await UserCommentCollection.find().toArray();
+      res.send({ result });
+  });
 
 
     } finally {
